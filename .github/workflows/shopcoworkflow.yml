@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout repo
-      - name: Checkout repository
+      - name: 24f2004781@ds.study.iitm.ac.in
         uses: actions/checkout@v3
 
       # 2. Setup Python
