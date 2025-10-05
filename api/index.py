@@ -13,35 +13,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
 @app.post("/")
 async def analyze_latency(request: Request):
-    body = await request.json()
-    regions = body.get("regions", [])
-    threshold = body.get("threshold_ms", 180)
+    if request.method == "POST":
+        body = await request.json()
+        regions = body.get("regions", [])
+        threshold = body.get("threshold_ms", 180)
+        
+        with open("telemetry.json") as f:
+            telemetry = json.load(f)
 
-    # Load telemetry data from local JSON (bundled in the repo)
-    with open("telemetry.json") as f:
-        telemetry = json.load(f)
+        results = {}
+        for region in regions:
+            records = telemetry.get(region, [])
+            if not records:
+                continue
+            latencies = [r["latency_ms"] for r in records]
+            uptimes = [r["uptime"] for r in records]
 
-    results = {}
-    for region in regions:
-        records = telemetry.get(region, [])
-        if not records:
-            continue
+            avg_latency = float(np.mean(latencies))
+            p95_latency = float(np.percentile(latencies, 95))
+            avg_uptime = float(np.mean(uptimes))
+            breaches = int(sum(1 for x in latencies if x > threshold))
 
-        latencies = [r["latency_ms"] for r in records]
-        uptimes = [r["uptime"] for r in records]
+            results[region] = {
+                "avg_latency": round(avg_latency, 2),
+                "p95_latency": round(p95_latency, 2),
+                "avg_uptime": round(avg_uptime, 3),
+                "breaches": breaches,
+            }
 
-        avg_latency = float(np.mean(latencies))
-        p95_latency = float(np.percentile(latencies, 95))
-        avg_uptime = float(np.mean(uptimes))
-        breaches = int(sum(1 for x in latencies if x > threshold))
-
-        results[region] = {
-            "avg_latency": round(avg_latency, 2),
-            "p95_latency": round(p95_latency, 2),
-            "avg_uptime": round(avg_uptime, 3),
-            "breaches": breaches,
-        }
-
-    return results
+        return results
+    return {"message": "Serverless function is alive, send a POST request with JSON."}
