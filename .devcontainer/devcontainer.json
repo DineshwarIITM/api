@@ -1,0 +1,16 @@
+{
+  "name": "ga2-57e1b8",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "astral-sh.uv",
+        "ms-python.python"
+      ]
+    }
+  },
+  "postCreateCommand": "uv pip install fastapi"
+}
